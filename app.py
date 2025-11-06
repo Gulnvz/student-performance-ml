@@ -6,14 +6,12 @@ import pandas as pd
 # Загружаем модель
 model = joblib.load("student_model.pkl")
 
-# Функция предсказания
 def predict_performance(gender, race, parental_education, lunch, prep_course, reading, writing):
     data = pd.DataFrame([[gender, race, parental_education, lunch, prep_course, reading, writing]],
                         columns=["gender", "race/ethnicity", "parental level of education", "lunch", "test preparation course", "reading score", "writing score"])
     prediction = model.predict(data)[0]
     return f"🎓 Предсказание уровня успеваемости: {prediction}"
 
-# Интерфейс
 iface = gr.Interface(
     fn=predict_performance,
     inputs=[
@@ -30,8 +28,8 @@ iface = gr.Interface(
     description="Введите данные, чтобы предсказать уровень успеваемости ученика."
 )
 
-# Запуск сервера
-# Запуск сервера
+# 🔹 Обновлённый запуск для Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    iface.launch(server_name="0.0.0.0", server_port=port, share=False, show_error=True)
+    # Render требует listen на 0.0.0.0 и без share
+    iface.launch(server_name="0.0.0.0", server_port=port, share=False, inbrowser=False, quiet=True)
