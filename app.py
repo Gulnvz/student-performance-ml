@@ -4,7 +4,11 @@ import joblib
 import pandas as pd
 
 # Загружаем модель
-model = joblib.load("student_model.pkl")
+with open("student_model.pkl", "rb") as f:
+    data = pickle.load(f)
+
+# Если pickle содержит словарь — достаём модель
+model = data['model'] if isinstance(data, dict) and 'model' in data else data
 
 # Функция предсказания
 def predict(hours):
@@ -16,13 +20,13 @@ def predict(hours):
     except Exception as e:
         return f"Ошибка: {str(e)}"
 
-# Создаем интерфейс
+# Интерфейс Gradio
 iface = gr.Interface(
     fn=predict,
     inputs=gr.Number(label="Количество часов обучения"),
-    outputs=gr.Textbox(label="Результат предсказания"),
+    outputs="text",
     title="Student Score Predictor",
-    description="Введите количество часов обучения, чтобы предсказать результат студента"
+    description="Введите количество часов обучения, чтобы предсказать результат студента",
 )
 
 # 🔹 Определяем порт из переменной окружения (Render требует именно так)
