@@ -1,53 +1,67 @@
-import os
 import gradio as gr
 import pickle
+import pandas as pd
 
-# Загружаем модель
-data = pickle.load(open("student_model.pkl", "rb"))
+# загрузка модели
+with open("student_model.pkl", "rb") as f:
+    model_data = pickle.load(f)
 
-# Если внутри словарь — достаём модель
-if isinstance(data, dict):
-    model = data.get("model")
-else:
-    model = data
+model = model_data['model']
+features = model_data['features']
 
-# Проверка на всякий случай
-if not hasattr(model, "predict"):
-    raise TypeError("Файл student_model.pkl не содержит корректную модель с методом predict")
+# функция для перевода текстовых ответов в числа
+def encode_input(gender, race, parental_edu, lunch, prep_course, reading_score, writing_score):
+    mapping = {
+        "gender": {"female": 0, "male": 1},
+        "race": {"group A": 0, "group B": 1, "group C": 2, "group D": 3, "group E": 4},
+        "parental_edu": {
+            "some high school": 0,
+            "high school": 1,
+            "some college": 2,
+            "associate's degree": 3,
+            "bachelor's degree": 4,
+            "master's degree": 5
+        },
+        "lunch": {"free/reduced": 0, "standard": 1},
+        "prep_course": {"none": 0, "completed": 1}
+    }
 
-# Функция предсказания
-def predict(hours):
-    try:
-        features = [[hours, 0, 0, 0, 0, 0, 0]]
-        prediction = model.predict(features)[0]
+    data = {
+        "gender": mapping["gender"][gender],
+        "race/ethnicity": mapping["race"][race],
+        "parental level of education": mapping["parental_edu"][parental_edu],
+        "lunch": mapping["lunch"][lunch],
+        "test preparation course": mapping["prep_course"][prep_course],
+        "reading score": reading_score,
+        "writing score": writing_score
+    }
 
-        # Если результат числовой
-        if isinstance(prediction, (int, float)):
-            score = round(float(prediction), 2)
-            if score >= 50:
-                color = "green"
-                text = f"🎓 Оценка студента: <span style='color:{color};font-weight:bold'>{score}</span> — отлично!"
-            else:
-                color = "red"
-                text = f"⚠️ Оценка студента: <span style='color:{color};font-weight:bold'>{score}</span> — нужно подтянуть знания!"
-        else:
-            text = f"Предсказание: {prediction}"
+    return pd.DataFrame([data])
 
-        return text
+# функция предсказания
+def predict_student(gender, race, parental_edu, lunch, prep_course, reading_score, writing_score):
+    x = encode_input(gender, race, parental_edu, lunch, prep_course, reading_score, writing_score)
+    pred = model.predict(x)[0]
+    return "🎓 High (>=70)" if pred == 1 else "📘 Low (<70)"
 
-    except Exception as e:
-        return f"Ошибка: {e}"
-
-# Интерфейс Gradio
+# интерфейс
 iface = gr.Interface(
-    fn=predict,
-    inputs=gr.Number(label="Количество часов обучения", value=5),
-    outputs=gr.Textbox(label="Результат предсказания"),
-    title="Student Score Predictor",
-    description="Введите количество часов, чтобы получить прогноз оценки. Чем больше часов — тем выше результат!"
+    fn=predict_student,
+    inputs=[
+        gr.Radio(["female", "male"], label="Gender"),
+        gr.Radio(["group A", "group B", "group C", "group D", "group E"], label="Race/Ethnicity"),
+        gr.Radio(
+            ["some high school", "high school", "some college", "associate's degree", "bachelor's degree", "master's degree"],
+            label="Parental level of education"
+        ),
+        gr.Radio(["free/reduced", "standard"], label="Lunch type"),
+        gr.Radio(["none", "completed"], label="Test preparation course"),
+        gr.Slider(0, 100, label="Reading score"),
+        gr.Slider(0, 100, label="Writing score")
+    ],
+    outputs=gr.Label(label="Prediction"),
+    title="🎓 Student Performance Predictor",
+    description="Определи, получит ли студент высокий балл по математике (High / Low) на основе других показателей."
 )
 
-# 🔹 Определяем порт из переменной окружения (Render требует именно так)
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 7860))
-    iface.launch(server_name="0.0.0.0", server_port=port)
+iface.launch()
