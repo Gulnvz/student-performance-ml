@@ -17,10 +17,26 @@ if not hasattr(model, "predict"):
 
 # Функция предсказания
 def predict(hours):
-    # Если модель ожидает 7 признаков — добавляем фиктивные нули
-    features = [[hours, 0, 0, 0, 0, 0, 0]]
-    prediction = model.predict(features)
-    return f"Оценка студента: {prediction[0]}"
+    try:
+        features = [[hours, 0, 0, 0, 0, 0, 0]]
+        prediction = model.predict(features)[0]
+
+        # Если результат числовой
+        if isinstance(prediction, (int, float)):
+            score = round(float(prediction), 2)
+            if score >= 50:
+                color = "green"
+                text = f"🎓 Оценка студента: <span style='color:{color};font-weight:bold'>{score}</span> — отлично!"
+            else:
+                color = "red"
+                text = f"⚠️ Оценка студента: <span style='color:{color};font-weight:bold'>{score}</span> — нужно подтянуть знания!"
+        else:
+            text = f"Предсказание: {prediction}"
+
+        return text
+
+    except Exception as e:
+        return f"Ошибка: {e}"
 
 # Интерфейс Gradio
 iface = gr.Interface(
