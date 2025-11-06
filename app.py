@@ -2,6 +2,7 @@ import os
 import gradio as gr
 import joblib
 import pandas as pd
+import pickle
 
 # Загружаем модель
 with open("student_model.pkl", "rb") as f:
@@ -13,12 +14,10 @@ model = data['model'] if isinstance(data, dict) and 'model' in data else data
 # Функция предсказания
 def predict(hours):
     try:
-        hours = float(hours)
-        df = pd.DataFrame([[hours]], columns=["hours"])
-        prediction = model.predict(df)[0]
-        return f"Ожидаемый результат студента: {prediction:.2f}"
+        prediction = model.predict([[hours]])
+        return f"Оценка студента: {prediction[0]}"
     except Exception as e:
-        return f"Ошибка: {str(e)}"
+        return f"Ошибка: {e}"
 
 # Интерфейс Gradio
 iface = gr.Interface(
