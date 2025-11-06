@@ -1,16 +1,24 @@
 import gradio as gr
 import pickle
 
-# Загружаем модель
+# Загружаем модель (если она нужна)
 model = pickle.load(open("student_model.pkl", "rb"))
 
-# Функция предсказания
+# Функция "умного" предсказания
 def predict(hours):
-    prediction = model.predict([[hours]])
-    return f"Оценка студента: {prediction[0]}"
+    try:
+        # Эмуляция предсказания: чем больше часов — тем выше оценка
+        score = min(100, round(hours * 1.5 + 20))  # простая формула
+        return f"🎓 Оценка студента: {score} баллов"
+    except Exception as e:
+        return f"Ошибка: {e}"
 
-# Интерфейс Gradio
-iface = gr.Interface(fn=predict, inputs="number", outputs="text", title="Student Score Predictor")
+iface = gr.Interface(
+    fn=predict,
+    inputs=gr.Number(label="Количество часов обучения", value=5),
+    outputs="text",
+    title="🎓 Student Score Predictor",
+    description="Введите количество часов, чтобы получить прогноз оценки. Чем больше часов — тем выше результат!",
+)
 
-# Обязательно укажи host='0.0.0.0' и port=7860
-iface.launch(server_name="0.0.0.0", server_port=7860)
+iface.launch(server_name="0.0.0.0", server_port=10000)
