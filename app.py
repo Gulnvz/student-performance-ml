@@ -31,5 +31,11 @@ iface = gr.Interface(
 # 🔹 Обновлённый запуск для Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    # Render требует listen на 0.0.0.0 и без share
-    iface.launch(server_name="0.0.0.0", server_port=port, share=False, inbrowser=False, quiet=True)
+    iface.launch(
+        server_name="0.0.0.0",
+        server_port=port,
+        share=False,
+        inbrowser=False,
+        quiet=True,
+        prevent_thread_lock=True
+    )
