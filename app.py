@@ -3,8 +3,17 @@ import gradio as gr
 import pickle
 
 # Загружаем модель
-model = pickle.load(open("student_model.pkl", "rb"))
-model = data["model"]
+data = pickle.load(open("student_model.pkl", "rb"))
+
+# Если внутри словарь — достаём модель
+if isinstance(data, dict):
+    model = data.get("model")
+else:
+    model = data
+
+# Проверка на всякий случай
+if not hasattr(model, "predict"):
+    raise TypeError("Файл student_model.pkl не содержит корректную модель с методом predict")
 
 # Функция предсказания
 def predict(hours):
