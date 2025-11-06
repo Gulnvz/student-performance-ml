@@ -4,26 +4,33 @@ import joblib
 import pandas as pd
 
 # Загружаем модель
-model = joblib.load("model.pkl")
+model = joblib.load("student_model.pkl")
 
 # Функция предсказания
-def predict(input_data):
-    # input_data — строка с числами, разделёнными пробелом
-    data = [float(x) for x in input_data.split()]
-    df = pd.DataFrame([data])
-    prediction = model.predict(df)[0]
-    return f"Предсказание модели: {prediction}"
+def predict_performance(gender, race, parental_education, lunch, prep_course, reading, writing):
+    data = pd.DataFrame([[gender, race, parental_education, lunch, prep_course, reading, writing]],
+                        columns=["gender", "race/ethnicity", "parental level of education", "lunch", "test preparation course", "reading score", "writing score"])
+    prediction = model.predict(data)[0]
+    return f"🎓 Предсказание уровня успеваемости: {prediction}"
 
-# Создаём интерфейс
+# Интерфейс
 iface = gr.Interface(
-    fn=predict,
-    inputs="text",
+    fn=predict_performance,
+    inputs=[
+        gr.Dropdown(["male", "female"], label="Gender"),
+        gr.Dropdown(["group A", "group B", "group C", "group D", "group E"], label="Race/Ethnicity"),
+        gr.Textbox(label="Parental Level of Education"),
+        gr.Dropdown(["standard", "free/reduced"], label="Lunch"),
+        gr.Dropdown(["none", "completed"], label="Test Preparation Course"),
+        gr.Number(label="Reading Score"),
+        gr.Number(label="Writing Score"),
+    ],
     outputs="text",
-    title="Модель машинного обучения",
-    description="Введите данные для предсказания"
+    title="Student Performance Predictor",
+    description="Введите данные, чтобы предсказать уровень успеваемости ученика."
 )
 
-# Запуск сервера с указанием порта
+# Запуск сервера
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     iface.launch(server_name="0.0.0.0", server_port=port)
