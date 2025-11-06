@@ -4,6 +4,7 @@ import pickle
 
 # Загружаем модель
 model = pickle.load(open("student_model.pkl", "rb"))
+model = data["model"]
 
 # Функция предсказания
 def predict(hours):
