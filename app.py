@@ -31,6 +31,7 @@ iface = gr.Interface(
 )
 
 # Запуск сервера
+# Запуск сервера
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    iface.launch(server_name="0.0.0.0", server_port=port)
+    iface.launch(server_name="0.0.0.0", server_port=port, share=False, show_error=True)
